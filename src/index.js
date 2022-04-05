@@ -1,4 +1,6 @@
-const node = 'https://mainnet.infura.io/';
+//const node = 'https://testnet.infura.io/';
+const node = 'https://mainnet.infura.io/v3/5000ff1f8f0a4528b96c9725d52890df';
+//const node = 'https://rinkeby.infura.io/v3/5000ff1f8f0a4528b96c9725d52890df';
 
 const mysql = require('mysql');
 const util = require('util');
@@ -6,7 +8,7 @@ const Web3 = require('web3');
 const web3 = new Web3(new Web3.providers.HttpProvider(node));
 
 //Insert your contract address here
-const contractAddress = '';
+const contractAddress = '0xB8c77482e45F1F44dE1745F52C74426C631bDD52';
 const abi = require('../eth/abi.js');
 let contract = new web3.eth.Contract(abi, contractAddress);
 
@@ -31,9 +33,9 @@ async function poll (fn) {
 let pool = mysql.createPool({
     connectionLimit: 10,
     host: 'localhost',
-    user: '',
-    password: '',
-    database: ''
+    user: 'root',
+    password: 'spring00',
+    database: 'eth_test'
 })
 
 //it would be convenient to use promisified version of 'query' methods
@@ -45,15 +47,14 @@ pool.query = util.promisify(pool.query);
 // database-related functions
 async function writeEvent(event) {    
     try {
-        delete event.raw;
-        delete event.event;
-        delete event.blockHash;
-        delete event.type;
-        delete event.id;
-        delete event.signature;
-
+        console.log(event);
+        const { from, to, value } = event.returnValues;
+        const queryString = `Insert into transfer (\`from\`, \`to\`, \`value\`, txHash, logIndex) VALUES ('${from}', '${to}', '${value}', '${event.transactionHash}', '${event.logIndex}')`;
+        console.log(queryString);
         await pool.query(
-            `Insert into \`transfer\` (\`json\`) VALUES (\'${JSON.stringify(event)}\')`
+            queryString
+            //`Insert into \`transfer\` (\`json\`) VALUES (\'${JSON.stringify(event)}\')`
+            //`Insert into transfer (from, to, value, txHash, logIndex) VALUES ('${from}', '${to}', '${value}', '${event.transactionHash}', '${event.logIndex}')`
         );
     } catch(e) {
         //if it's 'duplicate record' error, do nothing, otherwise rethrow
@@ -64,17 +65,15 @@ async function writeEvent(event) {
 }
 
 async function getLatestCachedBlock() {
-    const defaultInitialBlock = 0;
-    
+    const defaultInitialBlock = 10443491;   //Block number of the first block in the testnet
+    /*
     let dbResult = await pool.query(
         'select json_unquote(json_extract(`json`,\'$.blockNumber\')) \
         as block from transfer order by id desc limit 1'
     );
-    return dbResult.length > 0 ? parseInt(dbResult[0].block) : defaultInitialBlock;     
-}
-
-async function selectTransfersFrom(sender) {
-    return await pool.query(`select json from transfer t where t.from = \'${sender}\'`);
+    return dbResult.length > 0 ? parseInt(dbResult[0].block) : defaultInitialBlock;    
+    */
+   return defaultInitialBlock;
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -91,7 +90,8 @@ async function cacheEvents(fromBlock, toBlock) {
 }
 
 async function scan() {
-    const MaxBlockRange = 500000;
+    //const MaxBlockRange = 500000;
+    const MaxBlockRange = 1000;
     
     let latestCachedBlock = await getLatestCachedBlock(); // latest block written to database 
     let latestEthBlock = 0;   // latest block in blockchain

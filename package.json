@@ -1,15 +1,24 @@
 {
-  "name": "1_eth_caching",
+  "name": "p1_eth_caching",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/springzh/p1_eth_caching.git"
+  },
+  "keywords": [],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/springzh/p1_eth_caching/issues"
+  },
+  "homepage": "https://github.com/springzh/p1_eth_caching#readme",
   "dependencies": {
-    "mysql": "^2.16.0",
-    "web3": "^1.0.0-beta.35"
+    "mysql": "^2.18.1",
+    "web3": "^1.7.1"
   }
 }
